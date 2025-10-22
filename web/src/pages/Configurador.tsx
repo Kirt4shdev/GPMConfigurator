@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/configurador/Sidebar';
 import { SVGViewer } from '@/components/configurador/SVGViewer';
 import { RightPanel } from '@/components/configurador/RightPanel';
 import { Topbar } from '@/components/configurador/Topbar';
+import { WizardEstaciones } from '@/components/wizard/WizardEstaciones';
 
 export const Configurador = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -13,6 +14,7 @@ export const Configurador = () => {
   const [currentStation, setCurrentStation] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -75,6 +77,10 @@ export const Configurador = () => {
     }
   };
 
+  const handleWizardComplete = () => {
+    loadProject();
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -104,6 +110,7 @@ export const Configurador = () => {
           currentStation={currentStation}
           onSelectStation={handleSelectStation}
           onCreateStation={handleCreateStation}
+          onOpenWizard={() => setWizardOpen(true)}
           isOpen={sidebarOpen}
           onToggle={() => setSidebarOpen(!sidebarOpen)}
         />
@@ -136,6 +143,15 @@ export const Configurador = () => {
           />
         </div>
       </div>
+
+      {/* Wizard */}
+      <WizardEstaciones
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        projectId={projectId!}
+        provincia={project?.provincia}
+        onComplete={handleWizardComplete}
+      />
     </div>
   );
 };

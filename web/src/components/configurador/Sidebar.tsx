@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/Button';
-import { Plus, ChevronLeft, ChevronRight, Gauge } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Gauge, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface SidebarProps {
@@ -7,6 +7,7 @@ interface SidebarProps {
   currentStation: any;
   onSelectStation: (id: string) => void;
   onCreateStation: () => void;
+  onOpenWizard?: () => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -16,6 +17,7 @@ export const Sidebar = ({
   currentStation,
   onSelectStation,
   onCreateStation,
+  onOpenWizard,
   isOpen,
   onToggle,
 }: SidebarProps) => {
@@ -29,8 +31,18 @@ export const Sidebar = ({
       >
         {isOpen && (
           <div className="h-full flex flex-col">
-            <div className="p-4 border-b">
-              <Button onClick={onCreateStation} size="sm" className="w-full">
+            <div className="p-4 border-b space-y-2">
+              {onOpenWizard && (
+                <Button 
+                  onClick={onOpenWizard} 
+                  size="sm" 
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  🪄 Asistente (Wizard)
+                </Button>
+              )}
+              <Button onClick={onCreateStation} size="sm" className="w-full" variant="outline">
                 <Plus className="w-4 h-4 mr-2" />
                 Nueva Estación
               </Button>
