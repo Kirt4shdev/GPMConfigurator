@@ -190,7 +190,7 @@ export const Step4_ElectricalPanel = ({ tipoNombre, initialData, onComplete, onB
                   <div className="flex-1">
                     <p className="font-medium">{dl.nombre}</p>
                     <p className="text-sm text-muted-foreground">
-                      {dl.marca} • €{dl.precio_unitario.toFixed(2)}
+                      {dl.marca} • €{parseFloat(dl.precio_unitario as any)?.toFixed(2) || '0.00'}
                     </p>
                   </div>
                 </div>
@@ -237,7 +237,7 @@ export const Step4_ElectricalPanel = ({ tipoNombre, initialData, onComplete, onB
                 <div className="flex-1">
                   <p className="font-medium text-sm">{prot.nombre}</p>
                   <p className="text-xs text-muted-foreground">
-                    {prot.marca} • €{prot.precio_unitario.toFixed(2)}
+                    {prot.marca} • €{parseFloat(prot.precio_unitario as any)?.toFixed(2) || '0.00'}
                   </p>
                 </div>
               </label>
@@ -300,7 +300,7 @@ export const Step4_ElectricalPanel = ({ tipoNombre, initialData, onComplete, onB
                     <div className="flex-1">
                       <p className="font-medium text-sm">{bat.nombre}</p>
                       <p className="text-xs text-muted-foreground">
-                        {bat.marca} • {bat.backup_horas}h • €{bat.precio_unitario.toFixed(2)}
+                        {bat.marca} • {bat.backup_horas}h • €{parseFloat(bat.precio_unitario as any)?.toFixed(2) || '0.00'}
                       </p>
                     </div>
                   </div>
@@ -339,7 +339,7 @@ export const Step4_ElectricalPanel = ({ tipoNombre, initialData, onComplete, onB
                   <div className="flex-1">
                     <p className="font-medium text-sm">{kit.nombre}</p>
                     <p className="text-xs text-muted-foreground">
-                      {kit.marca} • €{kit.precio_unitario.toFixed(2)}
+                      {kit.marca} • €{parseFloat(kit.precio_unitario as any)?.toFixed(2) || '0.00'}
                     </p>
                   </div>
                 </div>

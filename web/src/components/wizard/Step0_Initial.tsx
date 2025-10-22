@@ -2,8 +2,19 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
+import { Combobox } from '@/components/ui/Combobox';
 import { Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+
+const PROVINCIAS_ESPANA = [
+  'Álava', 'Albacete', 'Alicante', 'Almería', 'Asturias', 'Ávila', 'Badajoz', 'Baleares',
+  'Barcelona', 'Burgos', 'Cáceres', 'Cádiz', 'Cantabria', 'Castellón', 'Ceuta', 'Ciudad Real',
+  'Córdoba', 'Cuenca', 'Girona', 'Granada', 'Guadalajara', 'Guipúzcoa', 'Huelva', 'Huesca',
+  'Jaén', 'La Coruña', 'La Rioja', 'Las Palmas', 'León', 'Lleida', 'Lugo', 'Madrid', 'Málaga',
+  'Melilla', 'Murcia', 'Navarra', 'Ourense', 'Palencia', 'Pontevedra', 'Salamanca',
+  'Santa Cruz de Tenerife', 'Segovia', 'Sevilla', 'Soria', 'Tarragona', 'Teruel', 'Toledo',
+  'Valencia', 'Valladolid', 'Vizcaya', 'Zamora', 'Zaragoza',
+].map(p => ({ value: p, label: p }));
 
 interface StationType {
   nombre: string;
@@ -58,12 +69,13 @@ export const Step0_Initial = ({ provincia: initialProvincia, onComplete }: Step0
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="provincia">Provincia del Proyecto *</Label>
-          <Input
-            id="provincia"
+          <Combobox
+            options={PROVINCIAS_ESPANA}
             value={provincia}
-            onChange={(e) => setProvincia(e.target.value)}
-            placeholder="Ej: Madrid"
-            className="max-w-md"
+            onChange={setProvincia}
+            placeholder="Seleccione una provincia"
+            searchPlaceholder="Buscar provincia..."
+            emptyText="No se encontró la provincia"
           />
           <p className="text-xs text-muted-foreground">
             La provincia se usará para calcular costes de instalación y transporte

@@ -381,7 +381,7 @@ export const Step1_Wind = ({ tipoNombre, initialData, onComplete, onBack }: Step
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {sensor.brand} • {sensor.type} • €{sensor.precio_base.toFixed(2)}
+                          {sensor.brand} • {sensor.type} • €{parseFloat(sensor.precio_base as any)?.toFixed(2) || '0.00'}
                         </p>
                         {isSelected && selection && (
                           <div className="mt-3 flex items-center gap-3">

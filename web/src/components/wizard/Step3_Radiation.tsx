@@ -8,11 +8,11 @@ import { cn } from '@/lib/cn';
 
 interface Sensor {
   id: string;
-  nombre: string;
-  marca: string;
-  tipo: string;
-  precio_unitario: number;
-  allowed_hotspots?: string[];
+  brand: string;
+  model: string;
+  type: string;
+  precio_base: number;
+  allowed_hotspots_json?: string;
 }
 
 interface POAConfig {
@@ -93,22 +93,30 @@ export const Step3_Radiation = ({ tipoNombre, poas, initialData, onComplete, onB
         api.getSensors({ type: 'soiling' }).catch(() => []),
       ]);
 
-      setSensoresGHI(ghi.filter((s: Sensor) => 
-        s.nombre.toLowerCase().includes('ghi') || 
-        s.nombre.toLowerCase().includes('horizontal')
-      ));
+      setSensoresGHI(ghi.filter((s: Sensor) => {
+        const model = s.model?.toLowerCase() || '';
+        const type = s.type?.toLowerCase() || '';
+        return model.includes('ghi') || 
+               model.includes('horizontal') ||
+               type.includes('ghi') ||
+               type.includes('horizontal');
+      }));
       setSensoresTemp(temp);
-      setSensoresRadiacion(rad.filter((s: Sensor) => 
-        !s.nombre.toLowerCase().includes('ghi') &&
-        !s.nombre.toLowerCase().includes('horizontal')
-      ));
+      setSensoresRadiacion(rad.filter((s: Sensor) => {
+        const model = s.model?.toLowerCase() || '';
+        const type = s.type?.toLowerCase() || '';
+        return !model.includes('ghi') &&
+               !model.includes('horizontal') &&
+               !type.includes('ghi') &&
+               !type.includes('horizontal');
+      }));
       setSensoresEnsuciamiento(soiling);
 
       // Auto-seleccionar GHI recomendado
-      const recommended = ghi.find((s: Sensor) => 
-        s.nombre.toLowerCase().includes('smp10') ||
-        s.nombre.toLowerCase().includes('ghi')
-      );
+      const recommended = ghi.find((s: Sensor) => {
+        const model = s.model?.toLowerCase() || '';
+        return model.includes('smp10') || model.includes('ghi');
+      });
       if (recommended && radiacionHorizontal) {
         setSelectedGHI({
           sensor_id: recommended.id,
@@ -152,14 +160,30 @@ export const Step3_Radiation = ({ tipoNombre, poas, initialData, onComplete, onB
   };
 
   const isValid = () => {
-    if (radiacionHorizontal && !selectedGHI) return false;
-    
-    for (let i = 0; i < poasConfig.length; i++) {
-      const config = poasConfig[i];
-      if (config.temperaturaPanel && config.sensoresTemp.length === 0) return false;
-      if (config.radiacionInclinada && config.sensoresRadiacion.length === 0) return false;
+    // Si no hay radiación horizontal, no es necesario sensor GHI
+    if (radiacionHorizontal && !selectedGHI) {
+      console.log('❌ Falta sensor GHI');
+      return false;
     }
     
+    // Para cada POA, validar solo si hay sensores disponibles
+    for (let i = 0; i < poasConfig.length; i++) {
+      const config = poasConfig[i];
+      
+      // Solo validar temperatura si está activada Y hay sensores disponibles
+      if (config.temperaturaPanel && sensoresTemp.length > 0 && config.sensoresTemp.length === 0) {
+        console.log(`❌ POA ${i + 1}: Falta seleccionar sensores de temperatura`);
+        return false;
+      }
+      
+      // Solo validar radiación si está activada Y hay sensores disponibles
+      if (config.radiacionInclinada && sensoresRadiacion.length > 0 && config.sensoresRadiacion.length === 0) {
+        console.log(`❌ POA ${i + 1}: Falta seleccionar sensores de radiación`);
+        return false;
+      }
+    }
+    
+    console.log('✅ Validación pasada');
     return true;
   };
 
@@ -244,9 +268,9 @@ export const Step3_Radiation = ({ tipoNombre, poas, initialData, onComplete, onB
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm">{sensor.nombre}</p>
+                    <p className="font-medium text-sm">{sensor.model}</p>
                     <p className="text-xs text-muted-foreground">
-                      {sensor.marca} • €{sensor.precio_unitario.toFixed(2)}
+                      {sensor.brand} • €{parseFloat(sensor.precio_base as any)?.toFixed(2) || '0.00'}
                     </p>
                   </div>
                 </div>
