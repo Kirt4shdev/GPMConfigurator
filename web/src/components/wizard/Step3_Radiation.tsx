@@ -34,6 +34,11 @@ interface RadiationSelection {
 interface Step3Props {
   tipoNombre: string;
   poas: Array<{ nombre: string; distancia_m: number }>;
+  initialData?: {
+    radiacionHorizontal: boolean;
+    sensorRadiacionHorizontal?: RadiationSelection;
+    poasConfig: POAConfig[];
+  };
   onComplete: (data: {
     radiacionHorizontal: boolean;
     sensorRadiacionHorizontal?: RadiationSelection;
@@ -42,13 +47,17 @@ interface Step3Props {
   onBack: () => void;
 }
 
-export const Step3_Radiation = ({ tipoNombre, poas, onComplete, onBack }: Step3Props) => {
+export const Step3_Radiation = ({ tipoNombre, poas, initialData, onComplete, onBack }: Step3Props) => {
   const [loading, setLoading] = useState(false);
   
   // Radiación horizontal
-  const [radiacionHorizontal, setRadiacionHorizontal] = useState(true);
+  const [radiacionHorizontal, setRadiacionHorizontal] = useState(
+    initialData?.radiacionHorizontal ?? true
+  );
   const [sensoresGHI, setSensoresGHI] = useState<Sensor[]>([]);
-  const [selectedGHI, setSelectedGHI] = useState<RadiationSelection | null>(null);
+  const [selectedGHI, setSelectedGHI] = useState<RadiationSelection | null>(
+    initialData?.sensorRadiacionHorizontal || null
+  );
   
   // Sensores para POAs
   const [sensoresTemp, setSensoresTemp] = useState<Sensor[]>([]);
@@ -57,15 +66,17 @@ export const Step3_Radiation = ({ tipoNombre, poas, onComplete, onBack }: Step3P
   
   // Config por POA
   const [poasConfig, setPOAsConfig] = useState<POAConfig[]>(
-    poas.map(() => ({
-      temperaturaPanel: true,
-      numSensoresTemp: 1,
-      radiacionInclinada: true,
-      ensuciamiento: false,
-      sensoresTemp: [],
-      sensoresRadiacion: [],
-      sensoresEnsuciamiento: [],
-    }))
+    initialData?.poasConfig && initialData.poasConfig.length > 0
+      ? initialData.poasConfig
+      : poas.map(() => ({
+          temperaturaPanel: true,
+          numSensoresTemp: 1,
+          radiacionInclinada: true,
+          ensuciamiento: false,
+          sensoresTemp: [],
+          sensoresRadiacion: [],
+          sensoresEnsuciamiento: [],
+        }))
   );
 
   useEffect(() => {

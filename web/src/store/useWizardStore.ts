@@ -29,9 +29,9 @@ export interface WizardStationType {
     numSensoresTemp: number;
     radiacionInclinada: boolean;
     ensuciamiento: boolean;
-    sensoresTemp?: Array<{ sensor_id: string; metros_cable: number }>;
-    sensoresRadiacion?: Array<{ sensor_id: string; metros_cable: number }>;
-    sensoresEnsuciamiento?: Array<{ sensor_id: string; metros_cable: number }>;
+    sensoresTemp: Array<{ sensor_id: string; metros_cable: number }>;
+    sensoresRadiacion: Array<{ sensor_id: string; metros_cable: number }>;
+    sensoresEnsuciamiento: Array<{ sensor_id: string; metros_cable: number }>;
   }>;
   // Paso 4: Cuadro eléctrico
   datalogger?: string; // option_id

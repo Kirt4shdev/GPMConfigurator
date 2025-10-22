@@ -3,16 +3,16 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { api } from '@/lib/api';
-import { Check, Loader2, Wind, Zap } from 'lucide-react';
+import { Check, Loader2, Wind, Zap, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface Sensor {
   id: string;
-  nombre: string;
-  marca: string;
-  tipo: string;
-  precio_unitario: number;
-  allowed_hotspots: string[];
+  brand: string;
+  model: string;
+  type: string;
+  precio_base: number;
+  allowed_hotspots_json?: string;
   recomendado?: boolean;
 }
 
@@ -24,117 +24,174 @@ interface WindSelection {
 
 interface Step1Props {
   tipoNombre: string;
+  initialData?: {
+    tipo: 'multiparametrico' | 'analogico';
+    selections: WindSelection[];
+  };
   onComplete: (data: { tipo: 'multiparametrico' | 'analogico'; selections: WindSelection[] }) => void;
   onBack: () => void;
 }
 
-export const Step1_Wind = ({ tipoNombre, onComplete, onBack }: Step1Props) => {
-  const [windType, setWindType] = useState<'multiparametrico' | 'analogico' | null>(null);
+export const Step1_Wind = ({ tipoNombre, initialData, onComplete, onBack }: Step1Props) => {
+  const [windType, setWindType] = useState<'multiparametrico' | 'analogico' | null>(
+    initialData?.tipo || null
+  );
   const [sensors, setSensors] = useState<Sensor[]>([]);
+  const [allSensors, setAllSensors] = useState<Sensor[]>([]); // Todos los sensores sin filtrar
   const [loading, setLoading] = useState(false);
-  const [selectedSensors, setSelectedSensors] = useState<WindSelection[]>([]);
+  const [selectedSensors, setSelectedSensors] = useState<WindSelection[]>(
+    initialData?.selections || []
+  );
   const [hotspots, setHotspots] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadHotspots();
+    loadInitialData();
   }, []);
 
   useEffect(() => {
-    if (windType) {
-      loadSensors();
+    if (windType && allSensors.length > 0) {
+      filterSensors();
     }
-  }, [windType]);
+  }, [windType, allSensors, hotspots]);
 
-  const loadHotspots = async () => {
-    try {
-      const data = await api.getHotspots();
-      setHotspots(data.filter((h: any) => h.key.includes('mast') || h.key.includes('viento')));
-    } catch (error) {
-      console.error('Error loading hotspots:', error);
-    }
-  };
-
-  const loadSensors = async () => {
+  const loadInitialData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      let data: Sensor[];
-      if (windType === 'multiparametrico') {
-        data = await api.getSensors({ type: 'multiparametrico' });
-        // Marcar WS600 como recomendado si existe
-        data = data.map((s) => ({
-          ...s,
-          recomendado: s.nombre.toLowerCase().includes('ws600') || 
-                       s.nombre.toLowerCase().includes('ws601'),
-        }));
-      } else {
-        data = await api.getSensors({ type: 'viento' });
-      }
-      
-      // Filtrar por hotspots de viento
-      const windHotspotKeys = hotspots.map((h) => h.key);
-      const filtered = data.filter((s) =>
-        s.allowed_hotspots?.some((h) => windHotspotKeys.includes(h))
-      );
-      
-      setSensors(filtered);
+      // Cargar hotspots y todos los sensores en paralelo
+      const [hotspotsData, sensorsData] = await Promise.all([
+        api.getHotspots(),
+        api.getSensors(),
+      ]);
 
-      // Auto-seleccionar el recomendado si hay uno
-      if (windType === 'multiparametrico') {
-        const recommended = filtered.find((s) => s.recomendado);
-        if (recommended && hotspots.length > 0) {
-          const firstHotspot = hotspots[0].key;
-          setSelectedSensors([
-            {
-              sensor_id: recommended.id,
-              hotspot_key: firstHotspot,
-              metros_cable: 15,
-            },
-          ]);
-        }
+      console.log('Hotspots loaded:', hotspotsData.length);
+      console.log('All sensors loaded:', sensorsData.length);
+      
+      // Filtrar hotspots de viento
+      const windHotspots = hotspotsData.filter(
+        (h: any) => h.key.includes('mast') || h.key.includes('viento') || h.key.includes('wind')
+      );
+      setHotspots(windHotspots);
+      
+      // Guardar todos los sensores
+      setAllSensors(sensorsData);
+
+      // Si ya había un tipo seleccionado, filtrar sensores
+      if (initialData?.tipo) {
+        filterSensorsByType(sensorsData, initialData.tipo, windHotspots);
       }
-    } catch (error) {
-      console.error('Error loading sensors:', error);
+    } catch (error: any) {
+      console.error('Error loading initial data:', error);
+      setError(error.message || 'Error al cargar datos');
     } finally {
       setLoading(false);
     }
   };
 
+  const filterSensors = () => {
+    if (!windType) return;
+    filterSensorsByType(allSensors, windType, hotspots);
+  };
+
+  const filterSensorsByType = (sensorsData: Sensor[], type: 'multiparametrico' | 'analogico', windHotspots: any[]) => {
+    console.log(`Filtering sensors for type: ${type}`);
+    
+    // Mapear tipos de wizard a tipos de BD
+    const typeMap: Record<string, string[]> = {
+      multiparametrico: ['multiparametrico', 'viento_multiparametrico', 'estacion_meteorologica'],
+      analogico: ['viento', 'anemometro', 'veleta', 'viento_analogico'],
+    };
+
+    const validTypes = typeMap[type] || [type];
+    console.log('Valid types for search:', validTypes);
+
+    // Filtrar por tipo
+    let filtered = sensorsData.filter((s) => 
+      validTypes.some(vt => s.type?.toLowerCase().includes(vt.toLowerCase()))
+    );
+    console.log(`Sensors after type filter:`, filtered.length);
+
+    // Filtrar por hotspots permitidos
+    const windHotspotKeys = windHotspots.map((h) => h.key);
+    if (windHotspotKeys.length > 0) {
+      filtered = filtered.filter((s) => {
+        try {
+          const allowedHotspots = s.allowed_hotspots_json 
+            ? JSON.parse(s.allowed_hotspots_json)
+            : [];
+          return allowedHotspots.length === 0 || 
+                 allowedHotspots.some((h: string) => windHotspotKeys.includes(h));
+        } catch {
+          return true; // Si hay error parseando, incluir el sensor
+        }
+      });
+    }
+    console.log(`Sensors after hotspot filter:`, filtered.length);
+
+    // Marcar recomendados
+    filtered = filtered.map((s) => ({
+      ...s,
+      recomendado:
+        type === 'multiparametrico' &&
+        (s.model.toLowerCase().includes('ws600') ||
+         s.model.toLowerCase().includes('ws601') ||
+         s.model.toLowerCase().includes('atmos')),
+    }));
+
+    setSensors(filtered);
+
+    // Auto-seleccionar recomendado si no hay selección previa
+    if (type === 'multiparametrico' && selectedSensors.length === 0) {
+      const recommended = filtered.find((s) => s.recomendado);
+      if (recommended && windHotspots.length > 0) {
+        const firstHotspot = windHotspots[0].key;
+        setSelectedSensors([
+          {
+            sensor_id: recommended.id,
+            hotspot_key: firstHotspot,
+            metros_cable: 15,
+          },
+        ]);
+      }
+    }
+  };
+
   const toggleSensor = (sensor: Sensor) => {
+    const isSelected = selectedSensors.some((s) => s.sensor_id === sensor.id);
+    
+    if (isSelected) {
+      setSelectedSensors(selectedSensors.filter((s) => s.sensor_id !== sensor.id));
+      return;
+    }
+
+    // Obtener hotspots permitidos del sensor
+    let allowedHotspots: string[] = [];
+    try {
+      allowedHotspots = sensor.allowed_hotspots_json 
+        ? JSON.parse(sensor.allowed_hotspots_json)
+        : [];
+    } catch (e) {
+      console.error('Error parsing allowed_hotspots:', e);
+    }
+
+    // Encontrar el primer hotspot compatible
+    const compatibleHotspot = hotspots.find((h) =>
+      allowedHotspots.length === 0 || allowedHotspots.includes(h.key)
+    );
+
+    const newSelection: WindSelection = {
+      sensor_id: sensor.id,
+      hotspot_key: compatibleHotspot?.key || hotspots[0]?.key || 'H1_mast_top',
+      metros_cable: 15,
+    };
+
     if (windType === 'multiparametrico') {
-      // Solo uno
-      const isSelected = selectedSensors.some((s) => s.sensor_id === sensor.id);
-      if (isSelected) {
-        setSelectedSensors([]);
-      } else {
-        const hotspot = hotspots.find((h) =>
-          sensor.allowed_hotspots?.includes(h.key)
-        );
-        setSelectedSensors([
-          {
-            sensor_id: sensor.id,
-            hotspot_key: hotspot?.key || hotspots[0]?.key || '',
-            metros_cable: 15,
-          },
-        ]);
-      }
+      // Solo uno permitido
+      setSelectedSensors([newSelection]);
     } else {
-      // Múltiples (anemómetro, veleta)
-      const isSelected = selectedSensors.some((s) => s.sensor_id === sensor.id);
-      if (isSelected) {
-        setSelectedSensors(selectedSensors.filter((s) => s.sensor_id !== sensor.id));
-      } else {
-        const hotspot = hotspots.find((h) =>
-          sensor.allowed_hotspots?.includes(h.key)
-        );
-        setSelectedSensors([
-          ...selectedSensors,
-          {
-            sensor_id: sensor.id,
-            hotspot_key: hotspot?.key || hotspots[0]?.key || '',
-            metros_cable: 15,
-          },
-        ]);
-      }
+      // Múltiples permitidos
+      setSelectedSensors([...selectedSensors, newSelection]);
     }
   };
 
@@ -155,6 +212,11 @@ export const Step1_Wind = ({ tipoNombre, onComplete, onBack }: Step1Props) => {
     onComplete({ tipo: windType, selections: selectedSensors });
   };
 
+  const handleTypeSelect = (type: 'multiparametrico' | 'analogico') => {
+    setWindType(type);
+    setSelectedSensors([]); // Limpiar selecciones anteriores al cambiar tipo
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -164,15 +226,30 @@ export const Step1_Wind = ({ tipoNombre, onComplete, onBack }: Step1Props) => {
         </p>
       </div>
 
+      {/* Error general */}
+      {error && (
+        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-red-900 dark:text-red-100">Error</p>
+              <p className="text-sm text-red-700 dark:text-red-200 mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Selector de tipo */}
       {windType === null && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
-            onClick={() => setWindType('multiparametrico')}
+            onClick={() => handleTypeSelect('multiparametrico')}
+            disabled={loading}
             className={cn(
               'relative p-6 rounded-lg border-2 text-left transition-all',
               'hover:border-primary hover:shadow-md',
-              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
+              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
             <div className="flex items-start gap-4">
@@ -198,11 +275,13 @@ export const Step1_Wind = ({ tipoNombre, onComplete, onBack }: Step1Props) => {
           </button>
 
           <button
-            onClick={() => setWindType('analogico')}
+            onClick={() => handleTypeSelect('analogico')}
+            disabled={loading}
             className={cn(
               'relative p-6 rounded-lg border-2 text-left transition-all',
               'hover:border-primary hover:shadow-md',
-              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
+              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
             <div className="flex items-start gap-4">
@@ -239,9 +318,30 @@ export const Step1_Wind = ({ tipoNombre, onComplete, onBack }: Step1Props) => {
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
           ) : sensors.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No hay sensores disponibles de tipo {windType}</p>
-              <p className="text-xs mt-2">Puede añadirlos desde el Panel de Administración</p>
+            <div className="p-6 rounded-lg border bg-muted/30 text-center">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground mb-2">
+                No hay sensores disponibles de tipo <strong>{windType}</strong>
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Total de sensores en BD: {allSensors.length}
+              </p>
+              <details className="text-left text-xs space-y-1 mt-4 p-3 bg-muted rounded">
+                <summary className="cursor-pointer font-medium">Ver tipos disponibles en BD</summary>
+                <ul className="mt-2 space-y-1">
+                  {Array.from(new Set(allSensors.map(s => s.type))).map(type => (
+                    <li key={type}>• {type}</li>
+                  ))}
+                </ul>
+              </details>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setWindType(null)}
+                className="mt-4"
+              >
+                Volver a elegir tipo
+              </Button>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -273,7 +373,7 @@ export const Step1_Wind = ({ tipoNombre, onComplete, onBack }: Step1Props) => {
                       </button>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium">{sensor.nombre}</h4>
+                          <h4 className="font-medium">{sensor.model}</h4>
                           {sensor.recomendado && (
                             <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded">
                               Recomendado
@@ -281,7 +381,7 @@ export const Step1_Wind = ({ tipoNombre, onComplete, onBack }: Step1Props) => {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {sensor.marca} • {sensor.tipo} • €{sensor.precio_unitario.toFixed(2)}
+                          {sensor.brand} • {sensor.type} • €{sensor.precio_base.toFixed(2)}
                         </p>
                         {isSelected && selection && (
                           <div className="mt-3 flex items-center gap-3">

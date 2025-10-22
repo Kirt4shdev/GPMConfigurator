@@ -12,14 +12,17 @@ interface POA {
 
 interface Step2Props {
   tipoNombre: string;
+  initialData?: POA[];
   onComplete: (poas: POA[]) => void;
   onBack: () => void;
 }
 
-export const Step2_POAs = ({ tipoNombre, onComplete, onBack }: Step2Props) => {
-  const [poas, setPOAs] = useState<POA[]>([
-    { nombre: 'POA 1', distancia_m: 10 },
-  ]);
+export const Step2_POAs = ({ tipoNombre, initialData, onComplete, onBack }: Step2Props) => {
+  const [poas, setPOAs] = useState<POA[]>(
+    initialData && initialData.length > 0
+      ? initialData
+      : [{ nombre: 'POA 1', distancia_m: 10 }]
+  );
 
   const addPOA = () => {
     setPOAs([...poas, { nombre: `POA ${poas.length + 1}`, distancia_m: 10 }]);

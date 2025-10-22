@@ -169,6 +169,14 @@ export const WizardEstaciones = ({
               {internalStep === 1 && currentTipo && (
                 <Step1_Wind
                   tipoNombre={currentTipo.nombre}
+                  initialData={
+                    currentTipo.tipoViento && currentTipo.sensoresViento
+                      ? {
+                          tipo: currentTipo.tipoViento,
+                          selections: currentTipo.sensoresViento,
+                        }
+                      : undefined
+                  }
                   onComplete={handleStep1Complete}
                   onBack={handleBack}
                 />
@@ -177,6 +185,7 @@ export const WizardEstaciones = ({
               {internalStep === 2 && currentTipo && (
                 <Step2_POAs
                   tipoNombre={currentTipo.nombre}
+                  initialData={currentTipo.poas}
                   onComplete={handleStep2Complete}
                   onBack={handleBack}
                 />
@@ -186,6 +195,15 @@ export const WizardEstaciones = ({
                 <Step3_Radiation
                   tipoNombre={currentTipo.nombre}
                   poas={currentTipo.poas || []}
+                  initialData={
+                    currentTipo.radiacionHorizontal !== undefined
+                      ? {
+                          radiacionHorizontal: currentTipo.radiacionHorizontal,
+                          sensorRadiacionHorizontal: currentTipo.sensorRadiacionHorizontal,
+                          poasConfig: currentTipo.poasConfig || [],
+                        }
+                      : undefined
+                  }
                   onComplete={handleStep3Complete}
                   onBack={handleBack}
                 />
@@ -194,6 +212,17 @@ export const WizardEstaciones = ({
               {internalStep === 4 && currentTipo && (
                 <Step4_ElectricalPanel
                   tipoNombre={currentTipo.nombre}
+                  initialData={
+                    currentTipo.datalogger
+                      ? {
+                          datalogger: currentTipo.datalogger,
+                          protecciones: currentTipo.protecciones || [],
+                          bateria: currentTipo.bateria,
+                          kitSolar: currentTipo.kitSolar,
+                          horasBackup: currentTipo.horasBackup || 24,
+                        }
+                      : undefined
+                  }
                   onComplete={handleStep4Complete}
                   onBack={handleBack}
                 />

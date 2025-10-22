@@ -17,6 +17,13 @@ interface PanelOption {
 
 interface Step4Props {
   tipoNombre: string;
+  initialData?: {
+    datalogger?: string;
+    protecciones: string[];
+    bateria?: string;
+    kitSolar?: string;
+    horasBackup: number;
+  };
   onComplete: (data: {
     datalogger?: string;
     protecciones: string[];
@@ -27,7 +34,7 @@ interface Step4Props {
   onBack: () => void;
 }
 
-export const Step4_ElectricalPanel = ({ tipoNombre, onComplete, onBack }: Step4Props) => {
+export const Step4_ElectricalPanel = ({ tipoNombre, initialData, onComplete, onBack }: Step4Props) => {
   const [loading, setLoading] = useState(false);
   
   const [dataloggers, setDataloggers] = useState<PanelOption[]>([]);
@@ -35,19 +42,27 @@ export const Step4_ElectricalPanel = ({ tipoNombre, onComplete, onBack }: Step4P
   const [baterias, setBaterias] = useState<PanelOption[]>([]);
   const [kitsSolares, setKitsSolares] = useState<PanelOption[]>([]);
   
-  const [selectedDatalogger, setSelectedDatalogger] = useState<string | null>(null);
-  const [selectedProtecciones, setSelectedProtecciones] = useState<string[]>([]);
-  const [selectedBateria, setSelectedBateria] = useState<string | null>(null);
-  const [selectedKitSolar, setSelectedKitSolar] = useState<string | null>(null);
-  const [horasBackup, setHorasBackup] = useState(24);
+  const [selectedDatalogger, setSelectedDatalogger] = useState<string | null>(
+    initialData?.datalogger || null
+  );
+  const [selectedProtecciones, setSelectedProtecciones] = useState<string[]>(
+    initialData?.protecciones || []
+  );
+  const [selectedBateria, setSelectedBateria] = useState<string | null>(
+    initialData?.bateria || null
+  );
+  const [selectedKitSolar, setSelectedKitSolar] = useState<string | null>(
+    initialData?.kitSolar || null
+  );
+  const [horasBackup, setHorasBackup] = useState(initialData?.horasBackup || 24);
 
   useEffect(() => {
     loadOptions();
   }, []);
 
   useEffect(() => {
-    // Auto-seleccionar batería según horas de backup
-    if (baterias.length > 0 && horasBackup > 0) {
+    // Auto-seleccionar batería según horas de backup (solo si no hay una ya seleccionada)
+    if (baterias.length > 0 && horasBackup > 0 && !initialData?.bateria) {
       const suitable = baterias
         .filter((b) => (b.backup_horas || 0) >= horasBackup)
         .sort((a, b) => a.precio_unitario - b.precio_unitario);
@@ -56,7 +71,7 @@ export const Step4_ElectricalPanel = ({ tipoNombre, onComplete, onBack }: Step4P
         setSelectedBateria(suitable[0].id);
       }
     }
-  }, [horasBackup, baterias]);
+  }, [horasBackup, baterias, initialData]);
 
   const loadOptions = async () => {
     setLoading(true);
@@ -73,13 +88,15 @@ export const Step4_ElectricalPanel = ({ tipoNombre, onComplete, onBack }: Step4P
       setBaterias(bats);
       setKitsSolares(solar);
 
-      // Auto-seleccionar datalogger recomendado
-      const recommended = dls.find((d: PanelOption) => 
-        d.nombre.toLowerCase().includes('cr1000x') ||
-        d.nombre.toLowerCase().includes('edge-01')
-      );
-      if (recommended) {
-        setSelectedDatalogger(recommended.id);
+      // Auto-seleccionar datalogger recomendado (solo si no hay uno ya seleccionado)
+      if (!initialData?.datalogger) {
+        const recommended = dls.find((d: PanelOption) => 
+          d.nombre.toLowerCase().includes('cr1000x') ||
+          d.nombre.toLowerCase().includes('edge-01')
+        );
+        if (recommended) {
+          setSelectedDatalogger(recommended.id);
+        }
       }
     } catch (error) {
       console.error('Error loading panel options:', error);
