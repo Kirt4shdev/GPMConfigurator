@@ -1,0 +1,514 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GPM Configurador API",
+    "version": "1.0.0",
+    "description": "API para configurador de estaciones meteorológicas - Grupo Dilus + GreenPowerMonitor",
+    "contact": {
+      "name": "GPM Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["usuario", "admin"] }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "client_name": { "type": "string" },
+          "client_email": { "type": "string", "format": "email" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Station": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "project_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "provincia": { "type": "string" },
+          "latitud": { "type": "number" },
+          "longitud": { "type": "number" },
+          "hotspot_map_json": { "type": "array" },
+          "selections": { "type": "array" },
+          "poas": { "type": "array" },
+          "panel_options": { "type": "array" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Sensor": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "brand": { "type": "string" },
+          "model": { "type": "string" },
+          "type": { "type": "string" },
+          "montaje_permitido": { "type": "string", "enum": ["estacion", "poa", "ambos"] },
+          "precio_base": { "type": "number" },
+          "allowed_hotspots_json": { "type": "array" },
+          "cable_pricing_json": { "type": "array" },
+          "docs_json": { "type": "object" },
+          "images_json": { "type": "object" },
+          "mediciones_json": { "type": "array" }
+        }
+      },
+      "POA": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "station_id": { "type": "string", "format": "uuid" },
+          "nombre": { "type": "string" },
+          "distancia_a_estacion_m": { "type": "number" },
+          "orientacion": { "type": "string" },
+          "inclinacion": { "type": "number" },
+          "sensors": { "type": "array" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Hotspot": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "label": { "type": "string" }
+        }
+      },
+      "PanelOption": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nombre": { "type": "string" },
+          "tipo": { "type": "string" },
+          "precio": { "type": "number" },
+          "attrs_json": { "type": "object" }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "tags": ["Auth"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string" },
+                    "refreshToken": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Refresh access token",
+        "tags": ["Auth"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": { "type": "string" }
+                },
+                "required": ["refreshToken"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get current user",
+        "tags": ["Auth"],
+        "responses": {
+          "200": {
+            "description": "Current user info",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proyectos": {
+      "get": {
+        "summary": "List projects",
+        "tags": ["Projects"],
+        "responses": {
+          "200": {
+            "description": "List of projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Project" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create project",
+        "tags": ["Projects"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "client_name": { "type": "string" },
+                  "client_email": { "type": "string", "format": "email" }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created"
+          }
+        }
+      }
+    },
+    "/proyectos/{id}": {
+      "get": {
+        "summary": "Get project by ID",
+        "tags": ["Projects"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project details"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update project",
+        "tags": ["Projects"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete project",
+        "tags": ["Projects"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project deleted"
+          }
+        }
+      }
+    },
+    "/estaciones": {
+      "get": {
+        "summary": "List stations",
+        "tags": ["Stations"],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stations"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create station",
+        "tags": ["Stations"],
+        "responses": {
+          "201": {
+            "description": "Station created"
+          }
+        }
+      }
+    },
+    "/estaciones/{id}": {
+      "get": {
+        "summary": "Get station by ID",
+        "tags": ["Stations"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station details with selections, POAs, panel options"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update station",
+        "tags": ["Stations"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete station",
+        "tags": ["Stations"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station deleted"
+          }
+        }
+      }
+    },
+    "/sensores": {
+      "get": {
+        "summary": "List sensors",
+        "tags": ["Sensors"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "montaje_permitido",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["estacion", "poa", "ambos"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of sensors"
+          }
+        }
+      }
+    },
+    "/hotspots": {
+      "get": {
+        "summary": "List hotspots",
+        "tags": ["Hotspots"],
+        "responses": {
+          "200": {
+            "description": "List of hotspots"
+          }
+        }
+      }
+    },
+    "/opciones-cuadro": {
+      "get": {
+        "summary": "List panel options",
+        "tags": ["Panel Options"],
+        "parameters": [
+          {
+            "name": "tipo",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of panel options"
+          }
+        }
+      }
+    },
+    "/poas": {
+      "get": {
+        "summary": "List POAs",
+        "tags": ["POAs"],
+        "parameters": [
+          {
+            "name": "station_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of POAs"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create POA",
+        "tags": ["POAs"],
+        "responses": {
+          "201": {
+            "description": "POA created"
+          }
+        }
+      }
+    },
+    "/precios/cable": {
+      "get": {
+        "summary": "Calculate cable price",
+        "tags": ["Helpers"],
+        "parameters": [
+          {
+            "name": "sensor_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "metros",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cable price calculated"
+          }
+        }
+      }
+    },
+    "/instalacion/estimacion": {
+      "get": {
+        "summary": "Estimate installation cost",
+        "tags": ["Helpers"],
+        "parameters": [
+          {
+            "name": "provincia",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "num_estaciones",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Installation cost estimated"
+          }
+        }
+      }
+    }
+  }
+}
+

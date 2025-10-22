@@ -1,0 +1,313 @@
+{
+  "meta": {
+    "version": "0.1.0",
+    "generated_at": "2025-10-22T08:40:20.627745Z",
+    "currency": "EUR"
+  },
+  "hotspots": [
+    {
+      "key": "H1_mast_top",
+      "x": 80,
+      "y": 20,
+      "label": "Mástil - Punta"
+    },
+    {
+      "key": "H2_mast_mid",
+      "x": 80,
+      "y": 60,
+      "label": "Mástil - Medio"
+    },
+    {
+      "key": "H3_poa_arm",
+      "x": 120,
+      "y": 80,
+      "label": "Brazo POA"
+    },
+    {
+      "key": "H4_rain_mount",
+      "x": 40,
+      "y": 70,
+      "label": "Soporte Pluviómetro"
+    },
+    {
+      "key": "H5_box_base",
+      "x": 50,
+      "y": 130,
+      "label": "Base - Cuadro"
+    },
+    {
+      "key": "H6_box_side",
+      "x": 110,
+      "y": 130,
+      "label": "Base - Datalogger"
+    }
+  ],
+  "sensors": [
+    {
+      "id": "SMP10",
+      "brand": "Kipp & Zonen",
+      "model": "SMP10",
+      "type": "radiacion",
+      "precio_base": 2150.0,
+      "allowed_hotspots": [
+        "H2_mast_mid",
+        "H3_poa_arm"
+      ],
+      "montaje_permitido": "ambos",
+      "cable_pricing": [
+        {
+          "min_m": 0,
+          "max_m": 10,
+          "precio": 0
+        },
+        {
+          "min_m": 10,
+          "max_m": 20,
+          "precio": 35
+        },
+        {
+          "min_m": 20,
+          "max_m": 50,
+          "precio": 75
+        },
+        {
+          "min_m": 50,
+          "max_m": 100,
+          "precio": 140
+        }
+      ],
+      "docs": {
+        "datasheet_url": "https://example.com/kz/smp10/datasheet.pdf",
+        "manual_url": "https://example.com/kz/smp10/manual.pdf"
+      },
+      "images": {
+        "icon_url": "https://example.com/img/smp10_icon.png",
+        "photo_url": "https://example.com/img/smp10.png"
+      }
+    },
+    {
+      "id": "WS600",
+      "brand": "Lufft",
+      "model": "WS600",
+      "type": "multiparametrico",
+      "mediciones": [
+        "viento",
+        "temperatura_aire",
+        "humedad",
+        "presion",
+        "precipitacion"
+      ],
+      "precio_base": 3150.0,
+      "allowed_hotspots": [
+        "H1_mast_top"
+      ],
+      "montaje_permitido": "estacion",
+      "cable_pricing": [
+        {
+          "min_m": 0,
+          "max_m": 10,
+          "precio": 0
+        },
+        {
+          "min_m": 10,
+          "max_m": 20,
+          "precio": 30
+        },
+        {
+          "min_m": 20,
+          "max_m": 50,
+          "precio": 70
+        },
+        {
+          "min_m": 50,
+          "max_m": 100,
+          "precio": 130
+        }
+      ],
+      "docs": {
+        "datasheet_url": "https://example.com/lufft/ws600/datasheet.pdf",
+        "manual_url": "https://example.com/lufft/ws600/manual.pdf"
+      },
+      "images": {
+        "icon_url": "https://example.com/img/ws600_icon.png",
+        "photo_url": "https://example.com/img/ws600.png"
+      }
+    },
+    {
+      "id": "THIES_FIRST_CLASS",
+      "brand": "Thies",
+      "model": "First Class Advanced",
+      "type": "viento",
+      "precio_base": 1650.0,
+      "allowed_hotspots": [
+        "H1_mast_top",
+        "H2_mast_mid"
+      ],
+      "montaje_permitido": "estacion",
+      "cable_pricing": [
+        {
+          "min_m": 0,
+          "max_m": 10,
+          "precio": 0
+        },
+        {
+          "min_m": 10,
+          "max_m": 20,
+          "precio": 25
+        },
+        {
+          "min_m": 20,
+          "max_m": 50,
+          "precio": 55
+        },
+        {
+          "min_m": 50,
+          "max_m": 100,
+          "precio": 110
+        }
+      ],
+      "docs": {
+        "datasheet_url": "https://example.com/thies/firstclass/datasheet.pdf",
+        "manual_url": "https://example.com/thies/firstclass/manual.pdf"
+      },
+      "images": {
+        "icon_url": "https://example.com/img/thies_firstclass_icon.png",
+        "photo_url": "https://example.com/img/thies_firstclass.png"
+      }
+    },
+    {
+      "id": "THIES_PLUVIOMETRO",
+      "brand": "Thies",
+      "model": "Tipping Bucket",
+      "type": "precipitacion",
+      "precio_base": 520.0,
+      "allowed_hotspots": [
+        "H4_rain_mount"
+      ],
+      "montaje_permitido": "estacion",
+      "cable_pricing": [
+        {
+          "min_m": 0,
+          "max_m": 10,
+          "precio": 0
+        },
+        {
+          "min_m": 10,
+          "max_m": 20,
+          "precio": 20
+        },
+        {
+          "min_m": 20,
+          "max_m": 50,
+          "precio": 45
+        },
+        {
+          "min_m": 50,
+          "max_m": 100,
+          "precio": 90
+        }
+      ],
+      "docs": {
+        "datasheet_url": "https://example.com/thies/pluvio/datasheet.pdf",
+        "manual_url": "https://example.com/thies/pluvio/manual.pdf"
+      },
+      "images": {
+        "icon_url": "https://example.com/img/thies_pluvio_icon.png",
+        "photo_url": "https://example.com/img/thies_pluvio.png"
+      }
+    },
+    {
+      "id": "TEMP_PANEL_PT100",
+      "brand": "Generic",
+      "model": "PT100 Panel Back",
+      "type": "temperatura_panel",
+      "precio_base": 120.0,
+      "allowed_hotspots": [
+        "H3_poa_arm"
+      ],
+      "montaje_permitido": "poa",
+      "cable_pricing": [
+        {
+          "min_m": 0,
+          "max_m": 10,
+          "precio": 0
+        },
+        {
+          "min_m": 10,
+          "max_m": 20,
+          "precio": 10
+        },
+        {
+          "min_m": 20,
+          "max_m": 50,
+          "precio": 25
+        },
+        {
+          "min_m": 50,
+          "max_m": 100,
+          "precio": 45
+        }
+      ],
+      "docs": {
+        "datasheet_url": "https://example.com/generic/pt100/datasheet.pdf",
+        "manual_url": "https://example.com/generic/pt100/manual.pdf"
+      },
+      "images": {
+        "icon_url": "https://example.com/img/pt100_icon.png",
+        "photo_url": "https://example.com/img/pt100.png"
+      }
+    }
+  ],
+  "opciones_cuadro": [
+    {
+      "id": "DL_CR1000X",
+      "nombre": "DataLogger CR1000X",
+      "tipo": "datalogger",
+      "precio": 2400.0,
+      "attrs": {
+        "comunicaciones": [
+          "RS485",
+          "Ethernet"
+        ],
+        "almacenamiento": "SD",
+        "modbus": true
+      }
+    },
+    {
+      "id": "DL_EDGE_01",
+      "nombre": "DataLogger Edge-01",
+      "tipo": "datalogger",
+      "precio": 980.0,
+      "attrs": {
+        "comunicaciones": [
+          "RS485",
+          "LTE"
+        ],
+        "almacenamiento": "eMMC",
+        "modbus": true
+      }
+    },
+    {
+      "id": "KIT_SPD",
+      "nombre": "Kit Protección Sobretensiones",
+      "tipo": "proteccion",
+      "precio": 180.0,
+      "attrs": {
+        "classes": [
+          "DC SPD Type 2"
+        ],
+        "canales": 2
+      }
+    },
+    {
+      "id": "MCB_2P_10A",
+      "nombre": "Magnetotérmico 2P 10A",
+      "tipo": "proteccion",
+      "precio": 24.0,
+      "attrs": {
+        "curva": "C",
+        "tension": "230VAC"
+      }
+    }
+  ]
+}
